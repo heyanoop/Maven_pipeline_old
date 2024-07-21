@@ -22,14 +22,13 @@ pipeline {
                 sh "mvn compile"
             }
         }
-
-        stage('Unit Test') {
+        
+        stage('unit test') {
             steps {
                 sh "mvn test"
             }
-           
         }
-
+        
         stage('Sonar') {
             steps {
                 withSonarQubeEnv("sonar-server") {
@@ -42,4 +41,3 @@ pipeline {
         }
     }
 }
-
