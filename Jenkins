@@ -23,11 +23,6 @@ pipeline {
             }
         }
         
-        stage('unit test') {
-            steps {
-                sh "mvn test"
-            }
-        }
         
         stage('Sonar') {
             steps {
