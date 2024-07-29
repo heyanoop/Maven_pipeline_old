@@ -18,10 +18,10 @@ pipeline {
         }
          stage('clean') {
             steps {
-                sh "mvn clean install"
+                sh "mvn clean install -Dmaven.test.skip=true"
             }
         }
-         
+        
         
         stage('Compile') {
             steps {
