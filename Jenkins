@@ -28,6 +28,7 @@ pipeline {
                 sh "mvn compile"
             }
         }
+        
          
         stage('Sonar') {
             steps {
@@ -38,6 +39,40 @@ pipeline {
                     -D sonar.projectKey=cicd '''
                 }
             }
+        }
+           stage('Docker_build') {
+            steps {
+                sh "docker build -t heyanoop/calculator:${env.BUILD_TAG} ."
+            }
+        }
+        stage('Docker_hub_login') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-token', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh 'docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD'
+                    }
+            }
+        }
+    }
+    stage('docker-hub-push') {
+            steps {
+                sh "docker push heyanoop/calculator:${env.BUILD_TAG}"
+            }
+        }
+        
+
+post {
+        always {
+            // Ensure Docker logout is performed
+            script {
+                sh "docker logout"
+            }
+        }
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed.'
         }
     }
 }
