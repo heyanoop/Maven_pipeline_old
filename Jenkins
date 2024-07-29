@@ -16,6 +16,12 @@ pipeline {
                 git changelog: false, poll: false, url: 'https://github.com/HouariZegai/Calculator.git'
             }
         }
+         stage('clean') {
+            steps {
+                sh "mvn clean install"
+            }
+        }
+         
         
         stage('Compile') {
             steps {
