@@ -7,7 +7,7 @@ pipeline {
     }
 
     environment {
-        SCANNER_HOME = tool 'sonar-scanner'
+        SCANNER_HOME = tool "sonar-scanner"
     }
 
     stages {
@@ -16,21 +16,23 @@ pipeline {
                 git changelog: false, poll: false, url: 'https://github.com/HouariZegai/Calculator.git'
             }
         }
-        stage('clean') {
+         stage('clean') {
             steps {
-                sh 'mvn clean install -Dmaven.test.skip=true'
+                sh "mvn clean install -Dmaven.test.skip=true"
             }
         }
-
+        
+        
         stage('Compile') {
             steps {
-                sh 'mvn compile'
+                sh "mvn compile"
             }
         }
-
+        
+         
         stage('Sonar') {
             steps {
-                withSonarQubeEnv('sonar-server') {
+                withSonarQubeEnv("sonar-server") {
                     sh ''' $SCANNER_HOME/bin/sonar-scanner \
                     -D sonar.projectName=cicd \
                     -D sonar.java.binaries=. \
@@ -38,7 +40,7 @@ pipeline {
                 }
             }
         }
-        stage('Docker_build') {
+           stage('Docker_build') {
             steps {
                 sh "docker build -t heyanoop/calculator:${env.BUILD_TAG} ."
             }
@@ -49,29 +51,15 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-token', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                         sh 'docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD'
                     }
-                }
             }
         }
-        stage('docker-hub-push') {
+    }
+    stage('docker-hub-push') {
             steps {
                 sh "docker push heyanoop/calculator:${env.BUILD_TAG}"
             }
         }
-
-        post {
-            always {
-                // Ensure Docker logout is performed
-                script {
-                    sh 'docker logout'
-                }
-            }
-            success {
-                echo 'Pipeline completed successfully!'
-            }
-            failure {
-                echo 'Pipeline failed.'
-            }
-        }
-    }
+        
 }
+
 
