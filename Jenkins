@@ -28,7 +28,7 @@ pipeline {
         }
         stage('Sonar') {
             steps {
-                withSonarQubeEnv("sonar-token") {
+                withSonarQubeEnv("sonar-server") {
                     sh ''' $SCANNER_HOME/bin/sonar-scanner \
                     -D sonar.projectName=cicd \
                     -D sonar.java.binaries=. \
