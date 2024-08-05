@@ -8,12 +8,16 @@ pipeline {
 
     environment {
         SCANNER_HOME = tool "sonar-scanner"
+        DOCKER_IMAGE = 'heyanoop/calculator'
+        DOCKER_TAG = "${env.BUILD_NUMBER}"
+        DOCKER_CREDENTIALS = credentials('docker-hub')
+        
     }
 
     stages {
         stage('Git checkout') {
             steps {
-                git changelog: false, poll: false, url: 'https://github.com/HouariZegai/Calculator.git'
+                git changelog: false, poll: false, url: 'https://github.com/heyanoop/Maven_pipeline.git'
             }
         }
          stage('clean') {
@@ -32,7 +36,7 @@ pipeline {
          
         stage('Sonar') {
             steps {
-                withSonarQubeEnv("sonar-server") {
+                withSonarQubeEnv("sonar-token") {
                     sh ''' $SCANNER_HOME/bin/sonar-scanner \
                     -D sonar.projectName=cicd \
                     -D sonar.java.binaries=. \
@@ -40,25 +44,36 @@ pipeline {
                 }
             }
         }
-           stage('Docker_build') {
-            steps {
-                sh "docker build -t heyanoop/calculator:${env.BUILD_TAG} ."
-            }
-        }
-        stage('Docker_hub_login') {
+      	stages {
+        stage('Build') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'docker-hub-token', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        sh 'docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD'
-                    }
-            }
-        }
-    }
-    stage('docker-hub-push') {
-            steps {
-                sh "docker push heyanoop/calculator:${env.BUILD_TAG}"
+                    // Build the Docker image
+                    sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                }
             }
         }
         
-}
+        stage('Push to Docker Hub') {
+            steps {
+                script {
+                    // Login to Docker Hub
+                    sh "echo $DOCKER_CREDENTIALS_PSW | docker login -u $DOCKER_CREDENTIALS_USR --password-stdin"
+                    
+                    // Push the image
+                    sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                    // Optionally, push as 'latest' as well
+                    sh "docker push ${DOCKER_IMAGE}:latest"
+                }
+            }
+        }
+         post {
+        always {
+            // Clean up
+            sh "docker rmi ${DOCKER_IMAGE}:${DOCKER_TAG}"
+            // Logout from Docker Hub
+            sh "docker logout"
+        }
+    }
+        
 }
